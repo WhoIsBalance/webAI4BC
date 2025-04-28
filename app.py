@@ -3,6 +3,8 @@ import streamlit as st
 from langchain_ollama import ChatOllama
 # from langchain_core.output_parsers import StrOutputParser
 # import requests
+import json
+import time
 
 
 # def chat_completion(messages):
@@ -25,7 +27,9 @@ from langchain_ollama import ChatOllama
 def chat_completion(messages):
     llm = ChatOllama(model="deepseek-r1:8b")
     response = llm.invoke(["human", messages])
-    return response.content
+    result = response.content.split("</think>")
+    print(result)
+    return result[-1]
 
 
 # def chat_completion(messages):
@@ -149,7 +153,7 @@ if st.session_state.web_state == 0:
         #     st.session_state.questionnaire["menopause"] = 2
 
         # 首次分娩
-        live_birth = st.radio("7、您初次生育的年龄是", ["大于等于30周岁", "小于30周岁", "未孕未育"], index=None)
+        live_birth = st.radio("7、您初次生育的年龄是", ["小于30周岁", "大于等于30周岁", "未孕未育"], index=None)
         st.session_state.questionnaire["live_birth"] = live_birth
         # if live_birth == "大于等于30周岁":
         #     st.session_state.questionnaire["live_birth"] = 0
@@ -159,7 +163,7 @@ if st.session_state.web_state == 0:
         #     st.session_state.questionnaire["live_birth"] = 2
 
         # 您是否有哺乳经历
-        breastfeeding = st.radio("8、您是否有哺乳经历", ["无", "有，大于4个月", "有，小于等于四个月"], index=None)
+        breastfeeding = st.radio("8、您是否有哺乳经历", ["无", "有，小于等于四个月", "有，大于4个月"], index=None)
         st.session_state.questionnaire["breastfeeding"] = breastfeeding
         # if breastfeeding == "无":
         #     st.session_state.questionnaire["breastfeeding"] = 0
@@ -238,6 +242,14 @@ else:
     with st.container(border=True):
         
         st.write(st.session_state.evaluation["content"])
+        data = dict(st.session_state.questionnaire)
+        data["result"] = st.session_state.evaluation["content"]
+
+        t = time.localtime()
+        current_time = time.strftime("%Y-%m-%d %H-%M-%S", t)
+        f = open(f".\\data\\{current_time}.json", "w", encoding="utf-8")
+        json.dump(data, f, ensure_ascii=False, indent=4)
+        f.close()
 
     if st.button("重新评估"):
         
