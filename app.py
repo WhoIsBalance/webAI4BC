@@ -1,10 +1,37 @@
 import streamlit as st
 # from openai import OpenAI 
-from langchain_ollama import ChatOllama
+# from langchain_ollama import ChatOllama
 # from langchain_core.output_parsers import StrOutputParser
-# import requests
+import requests
 import json
 import time
+
+
+# 注入自定义 CSS 样式
+st.markdown(
+    """
+    <style>
+        /* 调整单选按钮的字体样式 */
+        div[data-testid="stRadio"] label[data-testid="stWidgetLabel"] div[data-testid="stMarkdownContainer"] p{
+            font-size: 15px; /* 字体大小 */
+            font-weight: bold; /* 字体加粗 */
+        }
+
+        div[data-testid="stNumberInput"] label[data-testid="stWidgetLabel"] div[data-testid="stMarkdownContainer"] p{
+            font-size: 15px; /* 字体大小 */
+            font-weight: bold; /* 字体加粗 */
+        }
+
+        div[data-testid="stHeading"] div[data-testid="stHeadingWithActionElements"] h1{
+            font-size: 30 /*字体大小 */
+            font-weight: bold; /* 字体加粗 */ 
+            text-align: center;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 
 
 # def chat_completion(messages):
@@ -24,56 +51,64 @@ import time
 #     return completion.choices[0].message.content
 
 
-def chat_completion(messages):
-    llm = ChatOllama(model="deepseek-r1:8b")
-    response = llm.invoke(["human", messages])
-    result = response.content.split("</think>")
-    print(result)
-    return result[-1]
-
-
 # def chat_completion(messages):
+#     llm = ChatOllama(model="deepseek-r1:8b")
+#     response = llm.invoke(["human", messages])
+#     result = response.content.split("</think>")
+#     print(result)
+#     return result[-1]
 
-#     url = "https://api.siliconflow.cn/v1/chat/completions"
-#     payload = {
-#         "model": "THUDM/GLM-4-9B-0414",
-#         "messages": [
-#             {
-#                 "role": "user",
-#                 "content": messages
-#             }
-#             ],
-#             "stream": False,
-#             "max_tokens": 512,
-#             "stop": None,
-#             "temperature": 0.7,
-#             "top_p": 0.7,
-#             "top_k": 50,
-#             "frequency_penalty": 0.5,
-#             "n": 1,
-#             "response_format": {"type": "text"},
-#             "tools": [
-#                 {
-#                     "type": "function",
-#                     "function": {
-#                         "description": "AIweb",
-#                         "name": "AIweb",
-#                         "parameters": {},
-#                         "strict": False
-#                     }
-#                 }
-#             ]
-#     }
 
-#     headers = {
-#         "Authorization": "Bearer sk-soueimxfoqedbafbvgcrldkotibblsafjexxyqcxsgbcdmlx",
-#         "Content-Type": "application/json"
-#     }
+def chat_completion(messages):
 
-#     response = requests.request("POST", url, json=payload, headers=headers)
+    url = "https://api.siliconflow.cn/v1/chat/completions"
+    payload = {
+        "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+        "messages": [
+            {
+                "role": "user",
+                "content": messages
+            }
+            ],
+            "stream": False,
+            "max_tokens": 512,
+            "stop": None,
+            "temperature": 0.7,
+            "top_p": 0.7,
+            "top_k": 50,
+            "frequency_penalty": 0.5,
+            "n": 1,
+            "response_format": {"type": "text"},
+            "tools": [
+                {
+                    "type": "function",
+                    "function": {
+                        "description": "AIweb",
+                        "name": "AIweb",
+                        "parameters": {},
+                        "strict": False
+                    }
+                }
+            ]
+    }
 
-#     return response.text
+    headers = {
+        "Authorization": "Bearer sk-soueimxfoqedbafbvgcrldkotibblsafjexxyqcxsgbcdmlx",
+        "Content-Type": "application/json"
+    }
 
+    response = requests.request("POST", url, json=payload, headers=headers).text
+    response = json.loads(response)
+
+
+    return response["choices"][0]["message"]["reasoning_content"]
+
+
+
+# 弹窗提醒
+@st.dialog("提交成功")
+def mention():
+    st.write("AI分析过程可能需要1分钟左右，请勿关闭页面，耐心等待！")
 
 
 if "web_state" not in st.session_state:
@@ -227,6 +262,7 @@ if st.session_state.web_state == 0:
             if b == 0:
 
                 # 整合结果
+                mention()
                 result = f"一位{age}岁，身高{height}cm、体重{weight}kg的{gender}，初潮年龄{first_tide}，绝经年龄{menopause},初次生育的年龄{live_birth}，哺乳经历{breastfeeding}、\
                     {biopsy}活检史或乳腺良性疾病手术史、一级亲属（母亲、姐妹、女儿）{family_cancer}乳腺癌，{brac12}BRCA1/2基因突变，{anxiety}焦虑、{high_calorie}作息不规律，长期高热量饮食或吸烟、喝酒，请判断该女性罹患乳腺癌的风险，确切回答属于高风险或中风险或低风险"
 
@@ -251,7 +287,9 @@ else:
         json.dump(data, f, ensure_ascii=False, indent=4)
         f.close()
 
-    if st.button("重新评估"):
+    resubmit_button = st.button("重新提交")
+
+    if resubmit_button:
         
         st.session_state.web_state = 0
         st.session_state.questionnaire = {

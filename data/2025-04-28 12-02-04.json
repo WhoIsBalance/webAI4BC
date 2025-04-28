@@ -1,0 +1,16 @@
+{
+    "gender": true,
+    "age": 12,
+    "weight": 12.0,
+    "height": 12.0,
+    "first_tide": "小于12周岁",
+    "menopause": "大于等于55周岁",
+    "live_birth": "未孕未育",
+    "breastfeeding": "有，小于等于四个月",
+    "biopsy": "无",
+    "family_cancer": "有",
+    "brac12": "无",
+    "anxiety": "有",
+    "high_calorie": "没有",
+    "result": "{\"id\":\"01967a8efecbf6f49d3a424ed8f800b5\",\"object\":\"chat.completion\",\"created\":1745812913,\"model\":\"deepseek-ai/DeepSeek-R1-Distill-Qwen-7B\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\\n\\n\",\"reasoning_content\":\"好的，我现在需要判断这位女性的乳腺癌风险。首先，她的年龄是12岁，身高体重都比较轻，这可能意味着她处于发育阶段。初潮年龄小于12岁，绝经年龄55岁以上，这些都可能影响乳腺癌的风险。\\n\\n接下来，她没有哺乳经历或者哺乳时间不超过四个月，这可能与乳腺健康有关。她的一级亲属中有乳腺癌家族史，但她的BRCA1/2基因没有突变，这可能降低遗传风险。\\n\\n她有焦虑症状，长期高热量饮食、吸烟或饮酒的习惯，这些因素可能增加癌症风险。同时，她没有活检史和乳腺良性疾病手术史，这可能意味着早期检查的可能性较低。\\n\\n综合来看，虽然有家族史和焦虑等危险因素，但BRCA基因突变缺失和低热量饮食可能降低了遗传风险。因此，她的乳腺癌风险可能属于中风险。\\n\"},\"finish_reason\":null}],\"usage\":{\"prompt_tokens\":268,\"completion_tokens\":192,\"total_tokens\":460,\"completion_tokens_details\":{\"reasoning_tokens\":189}},\"system_fingerprint\":\"\"}"
+}

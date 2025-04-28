@@ -26,12 +26,8 @@ langchain-ollama==0.3.2
 langsmith==0.3.37
 MarkupSafe==3.0.2
 narwhals==1.36.0
-numpy==2.2.5
-ollama==0.4.8
-openai==1.76.0
 orjson==3.10.16
 packaging==24.2
-pandas==2.2.3
 pillow==11.2.1
 protobuf==5.29.4
 pyarrow==19.0.1
