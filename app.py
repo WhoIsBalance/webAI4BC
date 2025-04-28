@@ -1,8 +1,8 @@
 import streamlit as st
-from openai import OpenAI 
+# from openai import OpenAI 
 from langchain_ollama import ChatOllama
-from langchain_core.output_parsers import StrOutputParser
-import requests
+# from langchain_core.output_parsers import StrOutputParser
+# import requests
 
 
 # def chat_completion(messages):
