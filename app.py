@@ -4,7 +4,7 @@ import streamlit as st
 # from langchain_core.output_parsers import StrOutputParser
 import requests
 import json
-import time
+# import time
 
         # div[data-testid="stHeading"] div[data-testid="stHeadingWithActionElements"] h1{
         #     font-size: 30 /*字体大小 */
@@ -109,9 +109,11 @@ def chat_completion(messages):
 
     response = requests.request("POST", url, json=payload, headers=headers).text
     response = json.loads(response)
+    result = response["choices"][0]["message"]["reasoning_content"]
+    result = result.replace("她", "您")
 
 
-    return response["choices"][0]["message"]["reasoning_content"]
+    return result
 
 
 
@@ -276,8 +278,8 @@ if st.session_state.web_state == 0:
 
                 # 整合结果
                 mention()
-                result = f"一位{age}岁，身高{height}cm、体重{weight}kg的女性，初潮年龄{first_tide}，绝经年龄{menopause},初次生育的年龄{live_birth}，哺乳经历{breastfeeding}、\
-                    {biopsy}活检史或乳腺良性疾病手术史、一级亲属（母亲、姐妹、女儿）{family_cancer}乳腺癌，{brac12}BRCA1/2基因突变，{anxiety}焦虑、{high_calorie}作息不规律，长期高热量饮食或吸烟、喝酒，请判断该女性罹患乳腺癌的风险，确切回答属于高风险或中风险或低风险"
+                result = f"我是一位{age}岁，身高{height}cm、体重{weight}kg的女性，初潮年龄{first_tide}，绝经年龄{menopause},初次生育的年龄{live_birth}，哺乳经历{breastfeeding}、\
+                    {biopsy}活检史或乳腺良性疾病手术史、一级亲属（母亲、姐妹、女儿）{family_cancer}乳腺癌，{brac12}BRCA1/2基因突变，{anxiety}焦虑、{high_calorie}作息不规律，长期高热量饮食或吸烟、喝酒，请判断该女性罹患乳腺癌的风险，确切回答属于高风险或中风险或低风险。"
 
                 # 输出结果
                 st.session_state.evaluation["content"] = chat_completion(result)
@@ -292,14 +294,14 @@ else:
     with st.container(border=True):
         
         st.write(st.session_state.evaluation["content"])
-        data = dict(st.session_state.questionnaire)
-        data["result"] = st.session_state.evaluation["content"]
+        # data = dict(st.session_state.questionnaire)
+        # data["result"] = st.session_state.evaluation["content"]
 
-        t = time.localtime()
-        current_time = time.strftime("%Y-%m-%d %H-%M-%S", t)
-        f = open(f".\\data\\{current_time}.json", "w", encoding="utf-8")
-        json.dump(data, f, ensure_ascii=False, indent=4)
-        f.close()
+        # t = time.localtime()
+        # current_time = time.strftime("%Y-%m-%d %H-%M-%S", t)
+        # f = open(f".\\data\\{current_time}.json", "w", encoding="utf-8")
+        # json.dump(data, f, ensure_ascii=False, indent=4)
+        # f.close()
 
     col1, col2, col3 = st.columns([2, 3, 2])  # 调整列的宽度比例
     with col2:
