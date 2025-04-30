@@ -4,7 +4,8 @@ import streamlit as st
 # from langchain_core.output_parsers import StrOutputParser
 import requests
 import json
-# import time
+import base64
+
 
         # div[data-testid="stHeading"] div[data-testid="stHeadingWithActionElements"] h1{
         #     font-size: 30 /*字体大小 */
@@ -20,6 +21,8 @@ import json
 
 
 # 注入自定义 CSS 样式
+main_bg = "background3.jpg"
+main_bg_ext = "jpg"
 st.markdown(
     """
     <style>
@@ -36,12 +39,43 @@ st.markdown(
             font-weight: bold; /* 字体加粗 */
         }
 
-
     </style>
     """,
     unsafe_allow_html=True
 )
 
+
+with open(main_bg, "rb") as img_file:
+    encoded_string = base64.b64encode(img_file.read()).decode()
+
+
+def extract_risk(content):
+    # 定义风险等级和对应的匹配字符串
+    risk_levels = {
+        "低风险": "低风险",
+        "中风险": "中风险",
+        "高风险": "高风险",
+        "非常高风险": "非常高风险",
+        "无风险": "无风险",
+        "中等风险": "中等风险",
+        "中低风险": "中低风险",
+        "中高风险": "中高风险",
+        "风险偏高":"高风险",
+        "风险偏低":"低风险",
+        "风险适中":"中风险",
+        "风险较低":"低风险",
+        "风险较高":"高风险",
+        "风险极高":"高风险",
+        "风险较低":"低风险",
+        "风险一般":"中风险",
+        "一般风险":"中风险",
+    }
+
+    conclusion = content.split("\n")[-1]
+    for level, match_str in risk_levels.items():
+        if level in conclusion:
+            return match_str
+    return -1
 
 
 # def chat_completion(messages):
@@ -147,6 +181,7 @@ if "web_state" not in st.session_state:
     st.session_state.evaluation = {
         "content": None  # 评估内容
     }
+    st.session_state.evaluation["risk"] = -1  # 评估风险
 
 # 链接AI
 # client = OpenAI(
@@ -159,18 +194,25 @@ if "web_state" not in st.session_state:
 if st.session_state.web_state == 0:
     # st.write("乳腺健康AI风险评估")
     st.markdown('<h2 style="font-size: 30px; font-weight: bold; text-align: center;">乳腺健康AI风险评估</h2>', unsafe_allow_html=True)
+    
+    # st.markdown(
+    #     f"""
+    #     <style>
+    #     [data-testid="stForm"] {{
+    #         background: url(data:image/{main_bg_ext};base64,{encoded_string});
+    #         background-size: cover;
+    #         background-position: center;
+    #     }}
+    #     </style
+    #     """,
+    #     unsafe_allow_html=True
+    # )
+        
     with st.form("my_form"):
         
         # 问卷内容
-        # 性别
-        # gender = st.radio("1、您的性别是", ["男", "女"], index=None) == "男"
-        # st.session_state.questionnaire["gender"] = gender
-        # if st.radio("1、您的性别是", ["男", "女"], index=None) == "男": 
-        #     st.session_state.questionnaire["gender"] = 0 
-        # else: 
-        #     st.session_state.questionnaire["gender"] = 1
 
-        age = st.number_input("1、您的年龄是多少", 0, 120, None)
+        age = st.number_input("1、请输入您的年龄", 0, 120, None)
         st.session_state.questionnaire["age"] = age
 
         # 体重
@@ -185,82 +227,46 @@ if st.session_state.web_state == 0:
         first_tide = st.radio("4、您的初潮年龄", ["小于12周岁", "大于等于12周岁"], index=None)
         st.session_state.questionnaire["first_tide"] = first_tide
 
-        # if first_tide: 
-        #     st.session_state.questionnaire["first_tide"] = 0 
-        # elif first_tide != None:
-        #     st.session_state.questionnaire["first_tide"] = 1
 
         # 绝经
         menopause = st.radio("5、您的绝经年龄", ["小于55周岁", "大于等于55周岁", "不适用"], index=None)
         st.session_state.questionnaire["menopause"] = menopause
-        # if menopause == "小于55周岁":
-        #     st.session_state.questionnaire["menopause"] = 0
-        # elif menopause == "大于等于55周岁":
-        #     st.session_state.questionnaire["menopause"] = 1
-        # elif menopause != None:
-        #     st.session_state.questionnaire["menopause"] = 2
+
 
         # 首次分娩
-        live_birth = st.radio("6、您初次生育的年龄是", ["小于30周岁", "大于等于30周岁", "未孕未育"], index=None)
+        live_birth = st.radio("6、您初次生育的年龄是", ["小于30周岁", "大于等于30周岁", "不适用"], index=None)
         st.session_state.questionnaire["live_birth"] = live_birth
-        # if live_birth == "大于等于30周岁":
-        #     st.session_state.questionnaire["live_birth"] = 0
-        # elif live_birth == "小于30周岁":
-        #     st.session_state.questionnaire["live_birth"] = 1
-        # elif live_birth != None:
-        #     st.session_state.questionnaire["live_birth"] = 2
+
 
         # 您是否有哺乳经历
-        breastfeeding = st.radio("7、您是否有哺乳经历", ["无", "有，小于等于四个月", "有，大于4个月"], index=None)
+        breastfeeding = st.radio("7、您是否有哺乳经历", ["无", "有，小于等于4个月", "有，大于4个月"], index=None)
         st.session_state.questionnaire["breastfeeding"] = breastfeeding
-        # if breastfeeding == "无":
-        #     st.session_state.questionnaire["breastfeeding"] = 0
-        # elif breastfeeding == "有，大于4个月":
-        #     st.session_state.questionnaire["breastfeeding"] = 1
-        # elif breastfeeding!= None:
-        #     st.session_state.questionnaire["breastfeeding"] = 2
+
 
         # 您是否有活检史或乳腺良性疾病手术史
         biopsy = st.radio("8、您是否有活检史或乳腺良性疾病手术史", ["无", "有"], index=None)
         st.session_state.questionnaire["biopsy"] = biopsy
-        # if biopsy == "是":
-        #     st.session_state.questionnaire["biopsy"] = 1
-        # elif biopsy!= None:
-        #     st.session_state.questionnaire["biopsy"] = 0
+
 
         # 您的一级亲属（母亲、姐妹、女儿）是否患有乳腺癌
         family_cancer = st.radio("9、您的一级亲属（母亲、姐妹、女儿）是否患有乳腺癌", ["无", "有"], index=None)
         st.session_state.questionnaire["family_cancer"] = family_cancer
-        # if family_cancer == "是":
-        #     st.session_state.questionnaire["family_cancer"] = 1
-        # elif family_cancer!= None:
-        #     st.session_state.questionnaire["family_cancer"] = 0
+
 
         # 是否有已知的BRAC1/2基因突变
         brac12 = st.radio("10、是否有已知的BRAC1/2基因突变", ["无", "有", "未知"], index=None)
         st.session_state.questionnaire["brac12"] = brac12
-        # if brac12 == "是":
-        #     st.session_state.questionnaire["brac12"] = 1
-        # elif brac12 == "否":
-        #     st.session_state.questionnaire["brac12"] = 0
-        # elif brac12!= None:
-        #     st.session_state.questionnaire["brac12"] = 2
+
 
         # 您是否存在焦虑、作息不规律
         anxiety = st.radio("11、您是否存在焦虑、作息不规律", ["没有", "有"], index=None)
         st.session_state.questionnaire["anxiety"] = anxiety
-        # if anxiety == "是":
-        #     st.session_state.questionnaire["anxiety"] = 1
-        # elif anxiety!= None:
-        #     st.session_state.questionnaire["anxiety"] = 0
+
 
         # 您是否长期高热量饮食或吸烟、喝酒
         high_calorie = st.radio("12、您是否长期高热量饮食或吸烟、喝酒", ["没有", "有"], index=None)
         st.session_state.questionnaire["high_calorie"] = high_calorie
-        # if high_calorie == "是":
-        #     st.session_state.questionnaire["high_calorie"] = 1
-        # elif high_calorie!= None:
-        #     st.session_state.questionnaire["high_calorie"] = 0
+
         
         st.divider()
         col1, col2, col3 = st.columns([2, 3, 2])  # 调整列的宽度比例
@@ -278,11 +284,27 @@ if st.session_state.web_state == 0:
 
                 # 整合结果
                 mention()
-                result = f"我是一位{age}岁，身高{height}cm、体重{weight}kg的女性，初潮年龄{first_tide}，绝经年龄{menopause},初次生育的年龄{live_birth}，哺乳经历{breastfeeding}、\
-                    {biopsy}活检史或乳腺良性疾病手术史、一级亲属（母亲、姐妹、女儿）{family_cancer}乳腺癌，{brac12}BRCA1/2基因突变，{anxiety}焦虑、{high_calorie}作息不规律，长期高热量饮食或吸烟、喝酒，请判断该女性罹患乳腺癌的风险，确切回答属于高风险或中风险或低风险。"
+                # result = f"我是一位{age}岁，身高{height}cm、体重{weight}kg的女性，初潮年龄{first_tide}，绝经年龄{menopause},初次生育的年龄{live_birth}，哺乳经历{breastfeeding}、\
+                #     {biopsy}活检史或乳腺良性疾病手术史、一级亲属（母亲、姐妹、女儿）{family_cancer}乳腺癌，{brac12}BRCA1/2基因突变，{anxiety}焦虑、{high_calorie}作息不规律，长期高热量饮食或吸烟、喝酒，请判断该女性罹患乳腺癌的风险，确切回答属于高风险或中风险或低风险。"
+                result = f"我是一位{age}岁的女性，初潮年龄{first_tide},初次生育的年龄{live_birth}，\
+                    {biopsy}活检史或乳腺良性疾病手术史、一级亲属（母亲、姐妹、女儿）{family_cancer}乳腺癌，请判断该女性罹患乳腺癌的风险，回答属于高风险或中风险或低风险。"
 
                 # 输出结果
-                st.session_state.evaluation["content"] = chat_completion(result)
+                try:
+                    st.session_state.evaluation["risk"] = -1
+                    # i = 0
+                    # while i < 3:
+                    st.session_state.evaluation["content"] = chat_completion(result)
+                        # risk = extract_risk(st.session_state.evaluation["content"])
+                        # if risk != -1:
+                        #     st.session_state.evaluation["risk"] = risk
+                        #     break
+                        # i+=1
+
+                except:
+                    st.session_state.evaluation["content"] = "AI评估出错，请尝试重新提交"
+                # if st.session_state.evaluation["risk"] == -1:
+                #     st.session_state.evaluation["content"] = "AI评估出错，请尝试重新提交"
                 st.session_state.web_state = 1
                 st.rerun()
 
@@ -311,10 +333,10 @@ else:
         
         st.session_state.web_state = 0
         st.session_state.questionnaire = {
-            # "age": None,  # 年龄
+            "age": None,  # 年龄
             "weight": None,  # 体重
             "height": None,  # 身高
-            "gender": None,  # 性别
+            # "gender": None,  # 性别
             "first_tide": None,  # 初潮年龄
             "menopause": None,  # 绝经
             "live_birth": None,  # 首次分娩
@@ -326,4 +348,5 @@ else:
             "high_calorie": None,  # 高卡路里
         }  
         st.session_state.evaluation["content"] = None
+        st.session_state.evaluation["risk"] = -1
         st.rerun()
