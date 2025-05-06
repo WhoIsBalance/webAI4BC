@@ -78,22 +78,6 @@ def extract_risk(content):
     return -1
 
 
-# def chat_completion(messages):
-
-#     client = OpenAI(
-#     # 若没有配置环境变量，请用百炼API Key将下行替换为：api_key="sk-xxx",
-#     api_key="sk-3a5dfdb8e0124cb89346e6fac8e03c40",  # 如何获取API Key：https://help.aliyun.com/zh/model-studio/developer-reference/get-api-key
-#     base_url="https://dashscope.aliyuncs.com/compatible-mode/v1")
-
-#     completion = client.chat.completions.create(
-#         model="deepseek-r1",  # 此处以 deepseek-r1 为例，可按需更换模型名称。
-#         messages=[
-#             {'role': 'user', 'content': messages}
-#         ]
-#     )
-
-#     return completion.choices[0].message.content
-
 
 # def chat_completion(messages):
 #     llm = ChatOllama(model="deepseek-r1:8b")
@@ -291,20 +275,10 @@ if st.session_state.web_state == 0:
 
                 # 输出结果
                 try:
-                    st.session_state.evaluation["risk"] = -1
-                    # i = 0
-                    # while i < 3:
                     st.session_state.evaluation["content"] = chat_completion(result)
-                        # risk = extract_risk(st.session_state.evaluation["content"])
-                        # if risk != -1:
-                        #     st.session_state.evaluation["risk"] = risk
-                        #     break
-                        # i+=1
-
                 except:
                     st.session_state.evaluation["content"] = "AI评估出错，请尝试重新提交"
-                # if st.session_state.evaluation["risk"] == -1:
-                #     st.session_state.evaluation["content"] = "AI评估出错，请尝试重新提交"
+
                 st.session_state.web_state = 1
                 st.rerun()
 
@@ -348,5 +322,4 @@ else:
             "high_calorie": None,  # 高卡路里
         }  
         st.session_state.evaluation["content"] = None
-        st.session_state.evaluation["risk"] = -1
         st.rerun()
