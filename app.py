@@ -160,9 +160,9 @@ def chat_completion(messages):
             }
             ],
             "stream": False,
-            "max_tokens": 1024,
+            "max_tokens": 512,
             "stop": None,
-            "temperature": 0.7,
+            "temperature": 0.3,
             "top_p": 0.7,
             "top_k": 50,
             "frequency_penalty": 0.5,
@@ -187,7 +187,7 @@ def chat_completion(messages):
     }
 
     responses = []
-    for i in range(5):
+    for i in range(3):
         response = requests.request("POST", url, json=payload, headers=headers).text
         response = json.loads(response)
         responses.append(response)
@@ -351,7 +351,7 @@ with st.container(border=False):
             st.divider()
             col1, col2, col3 = st.columns([2, 3, 2])  # 调整列的宽度比例
             with col2:
-                submit_button = st.form_submit_button(label="开始评估", use_container_width=True)
+                submit_button = st.form_submit_button(label="开始评估", use_container_width=True, type="primary")
             b = 0
             if submit_button:
                 for key in st.session_state.questionnaire.keys():
@@ -372,14 +372,13 @@ with st.container(border=False):
                     # 输出结果
                     try:
                         result = st.session_state.evaluation["content"] = chat_completion(result)
-                        print(result)
                         if result == -1:
-                            st.session_state.evaluation["content"] = "AI评估出错，请尝试重新提交"
+                            st.session_state.evaluation["content"] = "AI小助手开小差啦，请尝试重新提交"
                         else:
                             st.session_state.evaluation["risk"] = result[0]
                             st.session_state.evaluation["content"] = result[1]
                     except:
-                        st.session_state.evaluation["content"] = "AI评估出错，请尝试重新提交"
+                        st.session_state.evaluation["content"] = "AI小助手开小差啦，请尝试重新提交"
 
                     st.session_state.web_state = 1
                     st.rerun()
@@ -397,12 +396,11 @@ with st.container(border=False):
             else:
                 risk_context = f'<span class="low-risk">{st.session_state.evaluation["risk"]}</span>'
             st.markdown(f'<p style="font-size: 25px; font-weight: bold; height: 45px;line-height: 45px;">评估结果：您属于{risk_context}人群</p><div style="border:1px solid #CCC"></div><br>', unsafe_allow_html=True)
-            # st.divider()
             st.write(st.session_state.evaluation["content"])
 
         col1, col2, col3 = st.columns([2, 3, 2])  # 调整列的宽度比例
         with col2:
-            resubmit_button = st.button("重新评估", use_container_width=True)
+            resubmit_button = st.button("重新评估", use_container_width=True, type="primary")
 
         if resubmit_button:
             
