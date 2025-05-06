@@ -154,7 +154,7 @@ def load_lottiefile(filepath: str):
     with open(filepath, 'r') as f:
         return json.load(f)
 
-lottie_rabbit = load_lottiefile(".\\image\\animations\\6793c5a5-0795-4193-92a3-5f3f6dd10316.json")
+lottie_rabbit = load_lottiefile(r"./image/animations/6793c5a5-0795-4193-92a3-5f3f6dd10316.json")
 # def chat_completion(messages):
 #     llm = ChatOllama(model="deepseek-r1:8b")
 #     response = llm.invoke(["human", messages])
