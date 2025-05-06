@@ -6,6 +6,7 @@ import requests
 import json
 import base64
 import time
+from streamlit_lottie import st_lottie
 
 
 # div[data-testid="stHeading"] div[data-testid="stHeadingWithActionElements"] h1{
@@ -131,15 +132,29 @@ def extract_risk(content):
         "一般风险":"中风险",
     }
     content = content.strip()
-    print(content)
     conclusion = content.split("\n")[-1]
     for level, match_str in risk_levels.items():
         if level in conclusion:
             return match_str
     return -1
 
+def load_lottiefile(filepath: str):
+    """
+    从指定文件路径加载 Lottie 动画文件。
 
+    Lottie 是一种 JSON 格式的动画文件，常用于在网页上展示矢量动画。
+    此函数会读取指定路径的 JSON 文件，并将其解析为 Python 字典。
 
+    Args:
+        filepath (str): Lottie 动画文件的路径。
+
+    Returns:
+        dict: 包含 Lottie 动画数据的 Python 字典。
+    """
+    with open(filepath, 'r') as f:
+        return json.load(f)
+
+lottie_rabbit = load_lottiefile(".\\image\\animations\\6793c5a5-0795-4193-92a3-5f3f6dd10316.json")
 # def chat_completion(messages):
 #     llm = ChatOllama(model="deepseek-r1:8b")
 #     response = llm.invoke(["human", messages])
@@ -222,7 +237,7 @@ def chat_completion(messages):
 @st.dialog("提交成功")
 def mention():
     st.write("AI分析过程可能需要1分钟左右，请勿关闭页面，耐心等待！")
-
+    st_lottie(lottie_rabbit, height=70, key="rabbit")
 
 if "web_state" not in st.session_state:
     st.session_state.web_state = 0  # 问卷页面
@@ -351,37 +366,45 @@ with st.container(border=False):
             st.divider()
             col1, col2, col3 = st.columns([2, 3, 2])  # 调整列的宽度比例
             with col2:
-                submit_button = st.form_submit_button(label="开始评估", use_container_width=True, type="primary")
+                if "button_disabled" not in st.session_state:
+                    st.session_state.button_disabled = False
+                submit_button = st.form_submit_button(label="开始评估", use_container_width=True, type="primary", disabled=st.session_state.button_disabled)
             b = 0
             if submit_button:
                 for key in st.session_state.questionnaire.keys():
                     if st.session_state.questionnaire[key] is None:
                         b = 1
+                        st.session_state.button_disabled = False
                         st.toast('请填写所有问题')
                         break
 
                 if b == 0:
 
-                    # 整合结果
-                    mention()
-                    result = f"我是一位{age}岁，身高{height}cm、体重{weight}kg的女性，初潮年龄{first_tide}，绝经年龄{menopause},初次生育的年龄{live_birth}，哺乳经历{breastfeeding}、\
-                        {biopsy}活检史或乳腺良性疾病手术史、一级亲属（母亲、姐妹、女儿）{family_cancer}乳腺癌，{brac12}BRCA1/2基因突变，{anxiety}焦虑、{high_calorie}作息不规律，长期高热量饮食或吸烟、喝酒，请判断该女性罹患乳腺癌的风险，确切回答属于高风险或中风险或低风险。"
-                    # result = f"我是一位{age}岁的女性，初潮年龄{first_tide},初次生育的年龄{live_birth}，\
-                    #     {biopsy}活检史或乳腺良性疾病手术史、一级亲属（母亲、姐妹、女儿）{family_cancer}乳腺癌，请判断该女性罹患乳腺癌的风险，回答属于高风险或中风险或低风险。"
-
-                    # 输出结果
-                    try:
-                        result = st.session_state.evaluation["content"] = chat_completion(result)
-                        if result == -1:
-                            st.session_state.evaluation["content"] = "AI小助手开小差啦，请尝试重新提交"
-                        else:
-                            st.session_state.evaluation["risk"] = result[0]
-                            st.session_state.evaluation["content"] = result[1]
-                    except:
-                        st.session_state.evaluation["content"] = "AI小助手开小差啦，请尝试重新提交"
-
-                    st.session_state.web_state = 1
+                    # 点击后禁用按钮
+                    st.session_state.button_disabled = True
                     st.rerun()
+
+            if st.session_state.button_disabled:
+
+                mention()
+                result = f"我是一位{age}岁，身高{height}cm、体重{weight}kg的女性，初潮年龄{first_tide}，绝经年龄{menopause},初次生育的年龄{live_birth}，哺乳经历{breastfeeding}、\
+                    {biopsy}活检史或乳腺良性疾病手术史、一级亲属（母亲、姐妹、女儿）{family_cancer}乳腺癌，{brac12}BRCA1/2基因突变，{anxiety}焦虑、{high_calorie}作息不规律，长期高热量饮食或吸烟、喝酒，请判断该女性罹患乳腺癌的风险，确切回答属于高风险或中风险或低风险。"
+                # result = f"我是一位{age}岁的女性，初潮年龄{first_tide},初次生育的年龄{live_birth}，\
+                #     {biopsy}活检史或乳腺良性疾病手术史、一级亲属（母亲、姐妹、女儿）{family_cancer}乳腺癌，请判断该女性罹患乳腺癌的风险，回答属于高风险或中风险或低风险。"
+
+                # 输出结果
+                try:
+                    result = st.session_state.evaluation["content"] = chat_completion(result)
+                    if result == -1:
+                        st.session_state.evaluation["content"] = "AI小助手开小差啦，请尝试重新提交"
+                    else:
+                        st.session_state.evaluation["risk"] = result[0]
+                        st.session_state.evaluation["content"] = result[1]
+                except:
+                    st.session_state.evaluation["content"] = "AI小助手开小差啦，请尝试重新提交"
+
+                st.session_state.web_state = 1
+                st.rerun()
 
         st.write("注：本乳腺健康评估问卷依据《中国女性乳腺癌筛查指南（2022年版）》针对中国女性制定，有助于您提前发现风险，可能会耽误您约1分钟的时间，最后结果由AI评估，仅供参考。")
 
@@ -391,12 +414,20 @@ with st.container(border=False):
         with st.container(border=True):
             if st.session_state.evaluation["risk"] == "高风险" or st.session_state.evaluation["risk"] == "中高风险":
                 risk_context = f'<span class="high-risk">{st.session_state.evaluation["risk"]}</span>'
+                st.markdown(f'<p style="font-size: 25px; font-weight: bold; height: 45px;line-height: 45px;">评估结果：您属于{risk_context}人群</p><div style="border:1px solid #CCC"></div><br>', unsafe_allow_html=True)
+                st.write(st.session_state.evaluation["content"])
             elif st.session_state.evaluation["risk"] == "中风险" or st.session_state.evaluation["risk"] == "中低风险":
                 risk_context = f'<span class="medium-risk">{st.session_state.evaluation["risk"]}</span>'
-            else:
+                st.markdown(f'<p style="font-size: 25px; font-weight: bold; height: 45px;line-height: 45px;">评估结果：您属于{risk_context}人群</p><div style="border:1px solid #CCC"></div><br>', unsafe_allow_html=True)
+                st.write(st.session_state.evaluation["content"])
+            elif st.session_state.evaluation["risk"] == "低风险":
                 risk_context = f'<span class="low-risk">{st.session_state.evaluation["risk"]}</span>'
-            st.markdown(f'<p style="font-size: 25px; font-weight: bold; height: 45px;line-height: 45px;">评估结果：您属于{risk_context}人群</p><div style="border:1px solid #CCC"></div><br>', unsafe_allow_html=True)
-            st.write(st.session_state.evaluation["content"])
+                st.markdown(f'<p style="font-size: 25px; font-weight: bold; height: 45px;line-height: 45px;">评估结果：您属于{risk_context}人群</p><div style="border:1px solid #CCC"></div><br>', unsafe_allow_html=True)
+                st.write(st.session_state.evaluation["content"])
+            else:
+                st.markdown(f'<p style="font-size: 25px; font-weight: bold; height: 45px;line-height: 45px;">AI小助手开小差啦，请尝试重新提交</p><div style="border:1px solid #CCC"></div><br>', unsafe_allow_html=True)
+            
+            
 
         col1, col2, col3 = st.columns([2, 3, 2])  # 调整列的宽度比例
         with col2:
@@ -422,4 +453,5 @@ with st.container(border=False):
             }  
             st.session_state.evaluation["content"] = None
             st.session_state.evaluation["risk"] = -1
+            st.session_state.button_disabled = False
             st.rerun()
