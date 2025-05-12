@@ -1,12 +1,13 @@
 import streamlit as st
-# from openai import OpenAI 
+from openai import OpenAI 
 # from langchain_ollama import ChatOllama
 # from langchain_core.output_parsers import StrOutputParser
-import requests
+# import requests
 import json
 import base64
 import time
 from streamlit_lottie import st_lottie
+import re
 
 
 # div[data-testid="stHeading"] div[data-testid="stHeadingWithActionElements"] h1{
@@ -131,12 +132,28 @@ def extract_risk(content):
         "风险一般":"中风险",
         "一般风险":"中风险",
     }
-    content = content.strip()
-    conclusion = content.split("\n")[-1]
-    for level, match_str in risk_levels.items():
-        if level in conclusion:
-            return match_str
-    return -1
+    conclusion = content.strip()
+    print("\n\n\n")
+    print(conclusion)
+
+    # 定义正则表达式，匹配可能的风险等级表述
+    # 排除“降低风险”“降低风险”等干扰项
+    pattern = r"(?:综合风险|符合|风险等级|风险分层|风险为|属于|为|是|风险|:|：|\*\*|乳腺癌)\s*(低风险|中风险|高风险|非常高风险|无风险|中等风险|中高风险|风险偏高|风险偏低|风险适中|风险较低|风险较高|风险极高|风险较低|风险一般|一般风险)|\b(低风险|中风险|高风险|非常高风险|无风险|中等风险|中高风险|风险偏高|风险偏低|风险适中|风险较低|风险较高|风险极高|风险较低|风险一般|一般风险)\b"
+    
+    # 使用正则表达式查找匹配项
+    matches = re.findall(pattern, conclusion)
+    
+    # 合并匹配结果
+    risk_level_ = [match[0] or match[1] for match in matches]
+    result = list(set(risk_level_))
+    print(result)
+    
+    if len(result) == 0:
+        return -1
+    # 去重并返回结果
+    else:
+        return risk_levels[result[0]]
+    
 
 def load_lottiefile(filepath: str):
     """
@@ -163,57 +180,114 @@ lottie_rabbit = load_lottiefile(r"./image/animations/6793c5a5-0795-4193-92a3-5f3
 #     return result[-1]
 
 
+# def chat_completion(messages):
+
+#     url = "https://api.siliconflow.cn/v1/chat/completions"
+#     payload = {
+#         "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",    # deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+#         "messages": [
+#             {
+#                 "role": "user",
+#                 "content": messages
+#             }
+#             ],
+#             "stream": False,
+#             "max_tokens": 300,
+#             "stop": None,
+#             "temperature": 0.3,
+#             "top_p": 0.7,
+#             "top_k": 50,
+#             "frequency_penalty": 0.5,
+#             "n": 1,
+#             "response_format": {"type": "text"},
+#             "tools": [
+#                 {
+#                     "type": "function",
+#                     "function": {
+#                         "description": "AIweb",
+#                         "name": "AIweb",
+#                         "parameters": {},
+#                         "strict": False
+#                     }
+#                 }
+#             ]
+#     }
+
+#     headers = {
+#         "Authorization": "Bearer sk-soueimxfoqedbafbvgcrldkotibblsafjexxyqcxsgbcdmlx",
+#         "Content-Type": "application/json"
+#     }
+
+#     responses = []
+#     for i in range(3):
+#         response = requests.request("POST", url, json=payload, headers=headers).text
+#         response = json.loads(response)
+#         responses.append(response)
+#         time.sleep(0.5)
+
+#     # 遍历responses，综合投票得到最优结果，返回风险评估
+#     risk_results = []
+#     for response in responses:
+#         reasoning_content = response["choices"][0]["message"]["reasoning_content"]
+#         risk = extract_risk(reasoning_content)
+#         risk_results.append(risk)
+#     # 对risk_results进行投票
+#     risk_counts = {}
+#     for risk in risk_results:
+#         if risk != -1:
+#             risk_counts.update({risk: risk_counts.get(risk, 0) + 1})
+        
+#     # 找到出现次数最多的风险
+#     if len(risk_counts) == 0:
+#         return -1
+#     else:
+#         max_risk = max(risk_counts, key=risk_counts.get)
+#         result = responses[risk_results.index(max_risk)]["choices"][0]["message"]["reasoning_content"]
+
+#     result = result.replace("她", "您")
+
+#     return max_risk, result
+
+
+
 def chat_completion(messages):
 
-    url = "https://api.siliconflow.cn/v1/chat/completions"
-    payload = {
-        "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
-        "messages": [
-            {
-                "role": "user",
-                "content": messages
-            }
-            ],
-            "stream": False,
-            "max_tokens": 512,
-            "stop": None,
-            "temperature": 0.3,
-            "top_p": 0.7,
-            "top_k": 50,
-            "frequency_penalty": 0.5,
-            "n": 1,
-            "response_format": {"type": "text"},
-            "tools": [
-                {
-                    "type": "function",
-                    "function": {
-                        "description": "AIweb",
-                        "name": "AIweb",
-                        "parameters": {},
-                        "strict": False
-                    }
-                }
-            ]
-    }
+    client = OpenAI(
+        # 若没有配置环境变量，请用百炼API Key将下行替换为：api_key="sk-xxx",
+        api_key="sk-3a5dfdb8e0124cb89346e6fac8e03c40",
+        base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+    )
 
-    headers = {
-        "Authorization": "Bearer sk-soueimxfoqedbafbvgcrldkotibblsafjexxyqcxsgbcdmlx",
-        "Content-Type": "application/json"
-    }
+
 
     responses = []
-    for i in range(3):
-        response = requests.request("POST", url, json=payload, headers=headers).text
-        response = json.loads(response)
+    risk_results = []
+    for i in range(1):
+
+        completion = client.chat.completions.create(
+            # 模型列表：https://help.aliyun.com/zh/model-studio/getting-started/models
+            model="deepseek-r1",
+            messages=[
+                {"role": "system", "content": "你是一名专业的乳腺外科医生。"},
+                {"role": "user", "content": f"{messages}"},
+            ],
+            # Qwen3模型通过enable_thinking参数控制思考过程（开源版默认True，商业版默认False）
+            # 使用Qwen3开源版模型时，若未启用流式输出，请将下行取消注释，否则会报错
+            # extra_body={"enable_thinking": False},
+            temperature=0.4,
+            max_tokens=500,
+            n=1
+        )
+        response = completion.choices[0].message.content
+
+        # print(response + '\n\n\n')
+        risk = extract_risk(completion.choices[0].message.content)
         responses.append(response)
+        risk_results.append(risk)
         time.sleep(0.5)
 
-    # 遍历responses，综合投票得到最优结果，返回风险评估
-    risk_results = []
-    for response in responses:
-        reasoning_content = response["choices"][0]["message"]["reasoning_content"]
-        risk = extract_risk(reasoning_content)
-        risk_results.append(risk)
+        
+        
     # 对risk_results进行投票
     risk_counts = {}
     for risk in risk_results:
@@ -225,13 +299,11 @@ def chat_completion(messages):
         return -1
     else:
         max_risk = max(risk_counts, key=risk_counts.get)
-        result = responses[risk_results.index(max_risk)]["choices"][0]["message"]["reasoning_content"]
+        result = responses[risk_results.index(max_risk)]
 
     result = result.replace("她", "您")
 
     return max_risk, result
-
-
 
 # 弹窗提醒
 @st.dialog("提交成功")
@@ -388,7 +460,7 @@ with st.container(border=False):
 
                 mention()
                 result = f"我是一位{age}岁，身高{height}cm、体重{weight}kg的女性，初潮年龄{first_tide}，绝经年龄{menopause},初次生育的年龄{live_birth}，哺乳经历{breastfeeding}、\
-                    {biopsy}活检史或乳腺良性疾病手术史、一级亲属（母亲、姐妹、女儿）{family_cancer}乳腺癌，{brac12}BRCA1/2基因突变，{anxiety}焦虑、{high_calorie}作息不规律，长期高热量饮食或吸烟、喝酒，请判断该女性罹患乳腺癌的风险，确切回答属于高风险或中风险或低风险。"
+                    {biopsy}活检史或乳腺良性疾病手术史、一级亲属（母亲、姐妹、女儿）{family_cancer}乳腺癌，{brac12}BRCA1/2基因突变，{anxiety}焦虑、作息不规律，{high_calorie}长期高热量饮食或吸烟、喝酒，请根据她的情况在最后判断该女性乳腺癌风险等级，只能回答高风险或中风险或低风险，并给出相应建议。内容精简且控制在500字以内，排版样式优美"
                 # result = f"我是一位{age}岁的女性，初潮年龄{first_tide},初次生育的年龄{live_birth}，\
                 #     {biopsy}活检史或乳腺良性疾病手术史、一级亲属（母亲、姐妹、女儿）{family_cancer}乳腺癌，请判断该女性罹患乳腺癌的风险，回答属于高风险或中风险或低风险。"
 
@@ -425,7 +497,7 @@ with st.container(border=False):
                 st.markdown(f'<p style="font-size: 25px; font-weight: bold; height: 45px;line-height: 45px;">评估结果：您属于{risk_context}人群</p><div style="border:1px solid #CCC"></div><br>', unsafe_allow_html=True)
                 st.write(st.session_state.evaluation["content"])
             else:
-                st.markdown(f'<p style="font-size: 25px; font-weight: bold; height: 45px;line-height: 45px;">AI小助手开小差啦，请尝试重新提交</p><div style="border:1px solid #CCC"></div><br>', unsafe_allow_html=True)
+                st.markdown(f'<p style="font-size: 25px; font-weight: bold; height: 45px;line-height: 45px;">AI小助手开小差啦，请尝试重新提交</p><br>', unsafe_allow_html=True)
             
             
 
