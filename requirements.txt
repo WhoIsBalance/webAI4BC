@@ -58,3 +58,4 @@ watchdog==6.0.0
 wheel==0.45.1
 zstandard==0.23.0
 streamlit-lottie==0.0.5
+openai==1.76.0
